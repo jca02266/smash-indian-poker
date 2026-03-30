@@ -1,0 +1,432 @@
+[
+  {
+    "id": 1,
+    "name": "マリオ",
+    "icon": "mario.png"
+  },
+  {
+    "id": 2,
+    "name": "ドンキー",
+    "icon": "donkey.png"
+  },
+  {
+    "id": 3,
+    "name": "リンク",
+    "icon": "link.png"
+  },
+  {
+    "id": 4,
+    "name": "サムス",
+    "icon": "samus.png"
+  },
+  {
+    "id": 5,
+    "name": "ダムス",
+    "icon": "samusd.png"
+  },
+  {
+    "id": 6,
+    "name": "ヨッシー",
+    "icon": "yoshi.png"
+  },
+  {
+    "id": 7,
+    "name": "カービィ",
+    "icon": "kirby.png"
+  },
+  {
+    "id": 8,
+    "name": "フォックス",
+    "icon": "fox.png"
+  },
+  {
+    "id": 9,
+    "name": "ピカチュウ",
+    "icon": "pikachu.png"
+  },
+  {
+    "id": 10,
+    "name": "ルイージ",
+    "icon": "luigi.png"
+  },
+  {
+    "id": 11,
+    "name": "ネス",
+    "icon": "ness.png"
+  },
+  {
+    "id": 12,
+    "name": "キャプファル",
+    "icon": "captain.png"
+  },
+  {
+    "id": 13,
+    "name": "プリン",
+    "icon": "purin.png"
+  },
+  {
+    "id": 14,
+    "name": "ピーチ",
+    "icon": "peach.png"
+  },
+  {
+    "id": 15,
+    "name": "デイジー",
+    "icon": "daisy.png"
+  },
+  {
+    "id": 16,
+    "name": "クッパ",
+    "icon": "koopa.png"
+  },
+  {
+    "id": 17,
+    "name": "アイクラ",
+    "icon": "ice_climber.png"
+  },
+  {
+    "id": 18,
+    "name": "シーク",
+    "icon": "sheik.png"
+  },
+  {
+    "id": 19,
+    "name": "ゼルダ",
+    "icon": "zelda.png"
+  },
+  {
+    "id": 20,
+    "name": "ドクマリ",
+    "icon": "mariod.png"
+  },
+  {
+    "id": 21,
+    "name": "ピチュー",
+    "icon": "pichu.png"
+  },
+  {
+    "id": 22,
+    "name": "ファルコ",
+    "icon": "falco.png"
+  },
+  {
+    "id": 23,
+    "name": "マルス",
+    "icon": "marth.png"
+  },
+  {
+    "id": 24,
+    "name": "ルキナ",
+    "icon": "lucina.png"
+  },
+  {
+    "id": 25,
+    "name": "ヤンリン",
+    "icon": "younglink.png"
+  },
+  {
+    "id": 26,
+    "name": "ガノン",
+    "icon": "ganon.png"
+  },
+  {
+    "id": 27,
+    "name": "ミュウツー",
+    "icon": "mewtwo.png"
+  },
+  {
+    "id": 28,
+    "name": "ロイ",
+    "icon": "roy.png"
+  },
+  {
+    "id": 29,
+    "name": "クロム",
+    "icon": "chrom.png"
+  },
+  {
+    "id": 30,
+    "name": "ゲッチ",
+    "icon": "gamewatch.png"
+  },
+  {
+    "id": 31,
+    "name": "メタナイト",
+    "icon": "metaknight.png"
+  },
+  {
+    "id": 32,
+    "name": "ピット",
+    "icon": "pit.png"
+  },
+  {
+    "id": 33,
+    "name": "ブラピ",
+    "icon": "pitb.png"
+  },
+  {
+    "id": 34,
+    "name": "ゼロサム",
+    "icon": "szerosuit.png"
+  },
+  {
+    "id": 35,
+    "name": "ワリオ",
+    "icon": "wario.png"
+  },
+  {
+    "id": 36,
+    "name": "スネーク",
+    "icon": "snake.png"
+  },
+  {
+    "id": 37,
+    "name": "アイク",
+    "icon": "ike.png"
+  },
+  {
+    "id": 38,
+    "name": "ポケトレ",
+    "icon": "ptrainer.png"
+  },
+  {
+    "id": 39,
+    "name": "ディディー",
+    "icon": "diddy.png"
+  },
+  {
+    "id": 40,
+    "name": "リュカ",
+    "icon": "lucas.png"
+  },
+  {
+    "id": 41,
+    "name": "ソニック",
+    "icon": "sonic.png"
+  },
+  {
+    "id": 42,
+    "name": "デデデ",
+    "icon": "dedede.png"
+  },
+  {
+    "id": 43,
+    "name": "ピクオリ",
+    "icon": "pikmin.png"
+  },
+  {
+    "id": 44,
+    "name": "ルカリオ",
+    "icon": "lucario.png"
+  },
+  {
+    "id": 45,
+    "name": "ロボ",
+    "icon": "robot.png"
+  },
+  {
+    "id": 46,
+    "name": "トリン",
+    "icon": "toonlink.png"
+  },
+  {
+    "id": 47,
+    "name": "ウルフ",
+    "icon": "wolf.png"
+  },
+  {
+    "id": 48,
+    "name": "むらびと",
+    "icon": "murabito.png"
+  },
+  {
+    "id": 49,
+    "name": "ロックマン",
+    "icon": "rockman.png"
+  },
+  {
+    "id": 50,
+    "name": "フィットレ",
+    "icon": "wiifit.png"
+  },
+  {
+    "id": 51,
+    "name": "ロゼチコ",
+    "icon": "rosetta.png"
+  },
+  {
+    "id": 52,
+    "name": "リトマ",
+    "icon": "littlemac.png"
+  },
+  {
+    "id": 53,
+    "name": "ゲッコウガ",
+    "icon": "gekkouga.png"
+  },
+  {
+    "id": 54,
+    "name": "パルテナ",
+    "icon": "palutena.png"
+  },
+  {
+    "id": 55,
+    "name": "パックマン",
+    "icon": "pacman.png"
+  },
+  {
+    "id": 56,
+    "name": "ルフレ",
+    "icon": "reflet.png"
+  },
+  {
+    "id": 57,
+    "name": "シュルク",
+    "icon": "shulk.png"
+  },
+  {
+    "id": 58,
+    "name": "クッパJr",
+    "icon": "koopajr.png"
+  },
+  {
+    "id": 59,
+    "name": "ダックハント",
+    "icon": "duckhunt.png"
+  },
+  {
+    "id": 60,
+    "name": "リュウ",
+    "icon": "ryu.png"
+  },
+  {
+    "id": 61,
+    "name": "ケン",
+    "icon": "ken.png"
+  },
+  {
+    "id": 62,
+    "name": "クラウド",
+    "icon": "cloud.png"
+  },
+  {
+    "id": 63,
+    "name": "カムイ",
+    "icon": "kamui.png"
+  },
+  {
+    "id": 64,
+    "name": "ベヨ",
+    "icon": "bayonetta.png"
+  },
+  {
+    "id": 65,
+    "name": "インクリング",
+    "icon": "inkling.png"
+  },
+  {
+    "id": 66,
+    "name": "リドリー",
+    "icon": "ridley.png"
+  },
+  {
+    "id": 67,
+    "name": "シモン",
+    "icon": "simon.png"
+  },
+  {
+    "id": 68,
+    "name": "リヒター",
+    "icon": "richter.png"
+  },
+  {
+    "id": 69,
+    "name": "キンクル",
+    "icon": "krool.png"
+  },
+  {
+    "id": 70,
+    "name": "しずえ",
+    "icon": "shizue.png"
+  },
+  {
+    "id": 71,
+    "name": "ガオガエン",
+    "icon": "gaogaen.png"
+  },
+  {
+    "id": 72,
+    "name": "パックン",
+    "icon": "packun.png"
+  },
+  {
+    "id": 73,
+    "name": "ジョーカー",
+    "icon": "jack.png"
+  },
+  {
+    "id": 74,
+    "name": "勇者",
+    "icon": "brave.png"
+  },
+  {
+    "id": 75,
+    "name": "バンカズ",
+    "icon": "buddy.png"
+  },
+  {
+    "id": 76,
+    "name": "テリー",
+    "icon": "dolly.png"
+  },
+  {
+    "id": 77,
+    "name": "ベレトス",
+    "icon": "master.png"
+  },
+  {
+    "id": 78,
+    "name": "ミェンミェン",
+    "icon": "tantan.png"
+  },
+  {
+    "id": 79,
+    "name": "スティーブ",
+    "icon": "pickel.png"
+  },
+  {
+    "id": 80,
+    "name": "セフィロス",
+    "icon": "edge.png"
+  },
+  {
+    "id": 81,
+    "name": "ホムヒカ",
+    "icon": "eflame.png"
+  },
+  {
+    "id": 82,
+    "name": "カズヤ",
+    "icon": "demon.png"
+  },
+  {
+    "id": 83,
+    "name": "ソラ",
+    "icon": "trail.png"
+  },
+  {
+    "id": 84,
+    "name": "格Mii",
+    "icon": "miifighter.png"
+  },
+  {
+    "id": 85,
+    "name": "剣Mii",
+    "icon": "miiswordsman.png"
+  },
+  {
+    "id": 86,
+    "name": "射Mii",
+    "icon": "miigunner.png"
+  }
+]
