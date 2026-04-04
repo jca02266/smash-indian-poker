@@ -1,6 +1,6 @@
 import { db } from '../firebase.js';
 import {
-  doc, setDoc, getDoc, updateDoc, onSnapshot, serverTimestamp, deleteField
+  doc, setDoc, getDoc, updateDoc, onSnapshot, serverTimestamp, deleteField, deleteDoc
 } from 'firebase/firestore';
 import { createCharacterDeck, createHandicapDeck, shuffle } from './cards.js';
 
