@@ -1,3 +1,5 @@
+[![Netlify Status](https://api.netlify.com/api/v1/badges/03bdf940-ac44-43b1-8631-b860a15909aa/deploy-status)](https://app.netlify.com/projects/smash-indian-poker/deploys)
+
 スマブラインディアンポーカー
 
 しょーぐん動画(https://www.youtube.com/watch?v=yaZzFtQIRFg)で紹介された

@@ -34,6 +34,9 @@ export function renderGame(container, user, roomId, { onLeave }) {
     </div>
   `;
 
+  let lastStatus = null;
+  let lastRound = null;
+
   // リアルタイム監視開始
   unsubscribe = subscribeRoom(roomId, (data) => {
     const el = container.querySelector('#game-content');
@@ -51,7 +54,14 @@ export function renderGame(container, user, roomId, { onLeave }) {
       return;
     }
 
-    renderRoomState(el, user, roomId, data, onLeave);
+    // アニメーションが必要か判定
+    const isAnimated = (lastStatus === 'waiting' && data.status === 'playing') || (lastRound !== null && data.round > lastRound);
+    const isRevealing = (lastStatus === 'playing' && data.status === 'judging');
+    
+    lastStatus = data.status;
+    lastRound = data.round;
+
+    renderRoomState(el, user, roomId, data, onLeave, isAnimated, isRevealing);
   });
 }
 
@@ -62,11 +72,10 @@ function cleanup() {
   }
 }
 
-function renderRoomState(el, user, roomId, room, onLeave) {
+function renderRoomState(el, user, roomId, room, onLeave, isAnimated = false, isRevealing = false) {
   const isHost = room.hostUid === user.uid;
   const players = room.players || {};
   const playerUids = Object.keys(players).sort((a, b) => (players[a].order || 0) - (players[b].order || 0));
-  const myCard = room.currentCards?.[user.uid];
 
   let html = '';
 
@@ -78,11 +87,11 @@ function renderRoomState(el, user, roomId, room, onLeave) {
   }
   // ===== プレイ中（カード配布済み、意思表示フェーズ） =====
   else if (room.status === 'playing') {
-    html = renderPlayingPhase(room, user, roomId, players, playerUids, isHost, isSpectator);
+    html = renderPlayingPhase(room, user, roomId, players, playerUids, isHost, isSpectator, isAnimated);
   }
   // ===== 全カード公開（判定フェーズ） =====
   else if (room.status === 'judging') {
-    html = renderJudgingPhase(room, user, roomId, players, playerUids, isHost, isSpectator);
+    html = renderJudgingPhase(room, user, roomId, players, playerUids, isHost, isSpectator, isRevealing);
   }
   // ===== ラウンド結果 =====
   else if (room.status === 'result') {
@@ -112,7 +121,7 @@ function renderWaitingRoom(room, roomId, user, isHost, players, playerUids, isSp
       </div>
 
       <div class="spectator-counter">
-        👁️ 観戦者: ${spectators.length} / 10
+        👥 観戦者: ${spectators.length} / 10
       </div>
 
       ${renderRoleSelector(isSpectator, false)}
@@ -169,7 +178,7 @@ function renderWaitingRoom(room, roomId, user, isHost, players, playerUids, isSp
   `;
 }
 
-function renderPlayingPhase(room, user, roomId, players, playerUids, isHost, isSpectator) {
+function renderPlayingPhase(room, user, roomId, players, playerUids, isHost, isSpectator, isAnimated) {
   const allDecided = checkAllDecided(room);
   const myDecision = room.decisions?.[user.uid];
   const activePlayers = playerUids.filter(uid => !players[uid].isSpectator);
@@ -179,12 +188,12 @@ function renderPlayingPhase(room, user, roomId, players, playerUids, isHost, isS
     ${renderGameHeader(room)}
     ${renderScoreboard(players)}
     ${renderRoleSelector(isSpectator, true)}
-    <div class="spectator-counter-mini">👁️ 観戦者: ${spectatorCount} / 10</div>
-    ${renderCards(room, user, players, playerUids, isSpectator)}
+    <div class="spectator-counter-mini">👥 観戦者: ${spectatorCount} / 10</div>
+    ${renderCards(room, user, players, playerUids, isSpectator, isAnimated)}
 
     <div class="decision-area">
       ${isSpectator ? `
-        <p class="decision-done" style="color: var(--accent-blue);">👁️ 観戦中です（全員のカードが見えています）</p>
+        <p class="decision-done" style="color: var(--accent-blue);">📣 観戦中です（全員のカードが見えています）</p>
       ` : !myDecision ? `
         <p class="decision-prompt">対戦に参加しますか？</p>
         <div class="decision-buttons">
@@ -216,7 +225,7 @@ function renderPlayingPhase(room, user, roomId, players, playerUids, isHost, isS
   `;
 }
 
-function renderJudgingPhase(room, user, roomId, players, playerUids, isHost, isSpectator) {
+function renderJudgingPhase(room, user, roomId, players, playerUids, isHost, isSpectator, isRevealing) {
   // 参加者のみ取得
   const fighters = playerUids.filter(uid => room.decisions?.[uid] === 'fight');
   const spectatorCount = playerUids.filter(uid => players[uid].isSpectator).length;
@@ -225,8 +234,8 @@ function renderJudgingPhase(room, user, roomId, players, playerUids, isHost, isS
     ${renderGameHeader(room)}
     ${renderScoreboard(players)}
     ${renderRoleSelector(isSpectator, true)}
-    <div class="spectator-counter-mini">👁️ 観戦者: ${spectatorCount} / 10</div>
-    ${renderCards(room, user, players, playerUids, true)}
+    <div class="spectator-counter-mini">👥 観戦者: ${spectatorCount} / 10</div>
+    ${renderCards(room, user, players, playerUids, true, false, isRevealing)}
 
     ${isHost ? `
       <div class="result-area">
@@ -277,7 +286,7 @@ function renderResultPhase(room, user, roomId, players, playerUids, isHost, isSp
     ${renderGameHeader(room)}
     ${renderScoreboard(players)}
     ${renderRoleSelector(isSpectator, true)}
-    <div class="spectator-counter-mini">👁️ 観戦者: ${spectatorCount} / 10</div>
+    <div class="spectator-counter-mini">👥 観戦者: ${spectatorCount} / 10</div>
     ${renderCards(room, user, players, playerUids, true)}
 
     <div class="round-result-display">
@@ -319,10 +328,12 @@ function renderGameHeader(room) {
   `;
 }
 
-function renderCards(room, user, players, playerUids, showAll) {
+function renderCards(room, user, players, playerUids, showAll, isAnimated = false, isRevealing = false) {
+  const participants = playerUids.filter(uid => !players[uid].isSpectator);
+  
   return `
     <div class="cards-container">
-      ${playerUids.filter(uid => !players[uid].isSpectator).map(uid => {
+      ${participants.map((uid, index) => {
         const card = room.currentCards?.[uid];
         if (!card) return '';
 
@@ -331,24 +342,45 @@ function renderCards(room, user, players, playerUids, showAll) {
         const decision = room.decisions?.[uid];
         
         let cardClass = isMe ? 'mine' : '';
-        if (isMe && !showAll) {
-          cardClass += ' hidden';
-        } else {
+        // 自分以外のカード、または結果公開時は反転（revealed）
+        if (showAll || !isMe) {
           cardClass += ' revealed';
         }
 
+        if (isAnimated) {
+          cardClass += ' card-anim-deal';
+        } else if (isRevealing) {
+          cardClass += ' card-anim-reveal';
+        }
+
+        let style = '';
+        if (isAnimated) {
+          // 配布(0.8s) + 個別遅延(index*0.1s) で配られた後にフリップが始まるように
+          style = `style="animation-delay: ${index * 0.12}s;"`;
+        } else if (isRevealing) {
+          style = `style="animation-delay: ${index * 0.1}s;"`;
+        }
+
         return `
-          <div class="card ${cardClass}">
-            ${decision ? `<span class="card-decision-badge ${decision}">${decision === 'fight' ? '⚔️' : '🏳️'}</span>` : ''}
-            <div class="card-player-name ${isMe ? 'is-me' : ''}">${players[uid].displayName}${isMe ? '（自分）' : ''}</div>
-            <div class="card-content" ${isMe && !showAll ? 'style="display: none;"' : ''}>
-              ${character ? `
-                <img class="card-character-icon" src="/icons/${character.icon}" alt="${character.name}" />
-                <div class="card-character-name">${character.name}</div>
-              ` : `
-                <div class="card-character-name">???</div>
-              `}
-              <div class="card-handicap ${getHandicapClass(card.handicap)}">${card.handicap}%</div>
+          <div class="card ${cardClass}" ${style}>
+            <div class="card-inner">
+              <!-- 裏面（？マーク、最初はこれが前面） -->
+              <div class="card-back"></div>
+              
+              <!-- 表面（キャラ情報、revealed時にこちらを向く） -->
+              <div class="card-front">
+                ${decision ? `<span class="card-decision-badge ${decision}">${decision === 'fight' ? '⚔️' : '🏳️'}</span>` : ''}
+                <div class="card-player-name ${isMe ? 'is-me' : ''}">${players[uid].displayName}${isMe ? '（自分）' : ''}</div>
+                <div class="card-content">
+                  ${character ? `
+                    <img class="card-character-icon" src="/icons/${character.icon}" alt="${character.name}" />
+                    <div class="card-character-name">${character.name}</div>
+                  ` : `
+                    <div class="card-character-name">???</div>
+                  `}
+                  <div class="card-handicap ${getHandicapClass(card.handicap)}">${card.handicap}%</div>
+                </div>
+              </div>
             </div>
           </div>
         `;
@@ -541,7 +573,7 @@ function renderRoleSelector(isSpectator, isMidGame) {
       <p class="role-selector-label">${isMidGame ? '現在の役割' : 'あなたの役割を選択'}</p>
       <div class="role-switch">
         <button class="role-btn ${!isSpectator ? 'active' : ''} ${isMidGame && isSpectator ? 'disabled' : ''}" id="btn-role-player">⚔️ 対戦する</button>
-        <button class="role-btn ${isSpectator ? 'active' : ''} ${isMidGame && !isSpectator ? 'disabled' : ''}" id="btn-role-spectator">👁️ 観戦する</button>
+        <button class="role-btn ${isSpectator ? 'active' : ''} ${isMidGame && !isSpectator ? 'disabled' : ''}" id="btn-role-spectator">👥 観戦する</button>
       </div>
       ${isMidGame ? '<p class="role-hint">ゲーム進行中は変更できません</p>' : ''}
     </div>
