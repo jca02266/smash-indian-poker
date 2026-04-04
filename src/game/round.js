@@ -3,18 +3,20 @@ import { doc, updateDoc } from 'firebase/firestore';
 import { dealCards, createHandicapDeck, shuffle } from './cards.js';
 
 function roomRef(roomId) {
-  return doc(db, 'rooms', roomId);
+  return doc(db, 'smashindianpoker', 'data', 'rooms', roomId);
 }
 
 /**
  * 新しいラウンドを開始（カード配布）
  */
 export async function startRound(roomId, roomData) {
-  const playerUids = Object.keys(roomData.players);
-  const playerCount = playerUids.length;
+  const activePlayers = Object.entries(roomData.players)
+    .filter(([_, p]) => !p.isSpectator)
+    .map(([uid, _]) => uid);
+  const playerCount = activePlayers.length;
 
   if (playerCount < 2) {
-    throw new Error('2人以上のプレイヤーが必要です');
+    throw new Error('2人以上のプレイヤー（対戦者）が必要です');
   }
 
   // キャラクターカードを配る（山札から消費）
@@ -30,7 +32,7 @@ export async function startRound(roomId, roomData) {
 
   // 各プレイヤーにカードを割り当て
   const currentCards = {};
-  playerUids.forEach((uid, i) => {
+  activePlayers.forEach((uid, i) => {
     currentCards[uid] = {
       characterId: charResult.dealt[i],
       handicap: dealtHandicaps[i],
@@ -68,9 +70,11 @@ export async function submitDecision(roomId, uid, decision) {
  * 全員が意思表示したか判定
  */
 export function checkAllDecided(roomData) {
-  const playerUids = Object.keys(roomData.players);
+  const activePlayerUids = Object.entries(roomData.players || {})
+    .filter(([_, p]) => !p.isSpectator)
+    .map(([uid, _]) => uid);
   const decisionUids = Object.keys(roomData.decisions || {});
-  return playerUids.every(uid => decisionUids.includes(uid));
+  return activePlayerUids.every(uid => decisionUids.includes(uid));
 }
 
 /**
@@ -115,5 +119,17 @@ export async function submitResult(roomId, roomData, winnerId, loserId) {
 export async function resetForNextRound(roomId) {
   await updateDoc(roomRef(roomId), {
     status: 'waiting_next',
+  });
+}
+
+/**
+ * ゲームを中断し、待機状態に戻す（ホスト用）
+ */
+export async function abortRound(roomId) {
+  await updateDoc(roomRef(roomId), {
+    status: 'waiting_next',
+    currentCards: {},
+    decisions: {},
+    results: { winner: null, loser: null },
   });
 }

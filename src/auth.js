@@ -1,12 +1,15 @@
-import { signInWithPopup, signOut as firebaseSignOut, onAuthStateChanged } from 'firebase/auth';
-import { auth, googleProvider } from './firebase.js';
+import { signInAnonymously, updateProfile, signOut as firebaseSignOut, onAuthStateChanged } from 'firebase/auth';
+import { auth } from './firebase.js';
 
-export async function signInWithGoogle() {
+export async function signInAsGuest(displayName) {
   try {
-    const result = await signInWithPopup(auth, googleProvider);
+    const result = await signInAnonymously(auth);
+    await updateProfile(result.user, {
+      displayName: displayName || '匿名プレイヤー'
+    });
     return result.user;
   } catch (error) {
-    console.error('ログインエラー:', error);
+    console.error('ゲストログインエラー:', error);
     throw error;
   }
 }

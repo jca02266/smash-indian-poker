@@ -49,9 +49,11 @@ function navigate(view, data = {}) {
       renderLobby(app, data.user, {
         onRoomJoined: (roomId) => {
           currentRoomId = roomId;
+          localStorage.setItem('smash_poker_room_id', roomId);
           navigate('game', { user: data.user, roomId });
         },
         onLogout: async () => {
+          localStorage.removeItem('smash_poker_room_id');
           await signOut();
           navigate('login');
         },
@@ -62,6 +64,7 @@ function navigate(view, data = {}) {
       renderGame(app, data.user, data.roomId, {
         onLeave: () => {
           currentRoomId = null;
+          localStorage.removeItem('smash_poker_room_id');
           navigate('lobby', { user: data.user });
         },
       });
@@ -74,7 +77,15 @@ onAuthChanged((user) => {
   if (user) {
     // ゲーム中ならそのまま
     if (currentView === 'game') return;
-    navigate('lobby', { user });
+
+    // リロード時のルーム復帰
+    const savedRoomId = localStorage.getItem('smash_poker_room_id');
+    if (savedRoomId) {
+      currentRoomId = savedRoomId;
+      navigate('game', { user, roomId: savedRoomId });
+    } else {
+      navigate('lobby', { user });
+    }
   } else {
     navigate('login');
   }

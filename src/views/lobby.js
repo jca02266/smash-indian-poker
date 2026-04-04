@@ -24,7 +24,7 @@ export function renderLobby(container, user, { onRoomJoined, onLogout }) {
         <div class="action-card">
           <h2>🚪 ルームに参加</h2>
           <div class="join-form">
-            <input type="text" id="input-room-id" placeholder="ルームID" maxlength="6" />
+            <input type="text" id="input-room-id" placeholder="ルームID" maxlength="6" autocomplete="off" spellcheck="false" autocorrect="off" />
             <button class="btn-primary" id="btn-join-room">参加</button>
           </div>
           <p class="error-msg" id="join-error"></p>
@@ -44,6 +44,7 @@ export function renderLobby(container, user, { onRoomJoined, onLogout }) {
       showToast(`ルーム ${roomId} を作成しました`, 'success');
       onRoomJoined(roomId);
     } catch (err) {
+      console.error('Room creation error:', err);
       showToast('ルーム作成に失敗しました', 'error');
       btn.innerHTML = '新しいルームを作る';
       btn.disabled = false;
@@ -66,6 +67,7 @@ export function renderLobby(container, user, { onRoomJoined, onLogout }) {
       showToast(`ルーム ${roomId} に参加しました`, 'success');
       onRoomJoined(roomId);
     } catch (err) {
+      console.error('Room join error:', err);
       errorEl.textContent = err.message;
     }
   });

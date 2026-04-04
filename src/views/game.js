@@ -1,5 +1,5 @@
-import { subscribeRoom, leaveRoom } from '../game/room.js';
-import { startRound, submitDecision, checkAllDecided, revealCards, submitResult, resetForNextRound } from '../game/round.js';
+import { subscribeRoom, leaveRoom, updateUserRole, kickPlayer, deleteRoom } from '../game/room.js';
+import { startRound, submitDecision, checkAllDecided, revealCards, submitResult, resetForNextRound, abortRound } from '../game/round.js';
 import { getCharacterById } from '../game/cards.js';
 import { showToast } from '../main.js';
 
@@ -35,14 +35,23 @@ export function renderGame(container, user, roomId, { onLeave }) {
   `;
 
   // リアルタイム監視開始
-  unsubscribe = subscribeRoom(roomId, (roomData) => {
-    if (!roomData) {
+  unsubscribe = subscribeRoom(roomId, (data) => {
+    const el = container.querySelector('#game-content');
+    if (!data) {
       showToast('ルームが見つかりません', 'error');
       cleanup();
       onLeave();
       return;
     }
-    renderRoomState(container.querySelector('#game-content'), user, roomId, roomData, onLeave);
+
+    // 自分がキックされたか退席した場合
+    if (!data.players[user.uid]) {
+      cleanup();
+      onLeave();
+      return;
+    }
+
+    renderRoomState(el, user, roomId, data, onLeave);
   });
 }
 
@@ -56,30 +65,32 @@ function cleanup() {
 function renderRoomState(el, user, roomId, room, onLeave) {
   const isHost = room.hostUid === user.uid;
   const players = room.players || {};
-  const playerUids = Object.keys(players);
+  const playerUids = Object.keys(players).sort((a, b) => (players[a].order || 0) - (players[b].order || 0));
   const myCard = room.currentCards?.[user.uid];
 
   let html = '';
 
+  const isSpectator = players[user.uid]?.isSpectator;
+
   // ===== 待機中 =====
   if (room.status === 'waiting') {
-    html = renderWaitingRoom(room, roomId, user, isHost, players, playerUids);
+    html = renderWaitingRoom(room, roomId, user, isHost, players, playerUids, isSpectator);
   }
   // ===== プレイ中（カード配布済み、意思表示フェーズ） =====
   else if (room.status === 'playing') {
-    html = renderPlayingPhase(room, user, roomId, players, playerUids, isHost);
+    html = renderPlayingPhase(room, user, roomId, players, playerUids, isHost, isSpectator);
   }
   // ===== 全カード公開（判定フェーズ） =====
   else if (room.status === 'judging') {
-    html = renderJudgingPhase(room, user, roomId, players, playerUids, isHost);
+    html = renderJudgingPhase(room, user, roomId, players, playerUids, isHost, isSpectator);
   }
   // ===== ラウンド結果 =====
   else if (room.status === 'result') {
-    html = renderResultPhase(room, user, roomId, players, playerUids, isHost);
+    html = renderResultPhase(room, user, roomId, players, playerUids, isHost, isSpectator);
   }
   // ===== 次のラウンド待ち =====
   else if (room.status === 'waiting_next') {
-    html = renderWaitingRoom(room, roomId, user, isHost, players, playerUids);
+    html = renderWaitingRoom(room, roomId, user, isHost, players, playerUids, isSpectator);
   }
 
   el.innerHTML = html;
@@ -88,7 +99,10 @@ function renderRoomState(el, user, roomId, room, onLeave) {
 
 // ===== Render Functions =====
 
-function renderWaitingRoom(room, roomId, user, isHost, players, playerUids) {
+function renderWaitingRoom(room, roomId, user, isHost, players, playerUids, isSpectator) {
+  const activePlayers = playerUids.filter(uid => !players[uid].isSpectator);
+  const spectators = playerUids.filter(uid => players[uid].isSpectator);
+
   return `
     <div class="waiting-screen">
       <div class="room-id-display">
@@ -97,44 +111,81 @@ function renderWaitingRoom(room, roomId, user, isHost, players, playerUids) {
         <div class="room-id-hint">タップしてコピー</div>
       </div>
 
+      <div class="spectator-counter">
+        👁️ 観戦者: ${spectators.length} / 10
+      </div>
+
+      ${renderRoleSelector(isSpectator, false)}
+
       ${renderScoreboard(players)}
 
+      <div class="waiting-section-title">対戦者 (${activePlayers.length} / 4)</div>
       <ul class="player-list">
-        ${playerUids.map(uid => {
+        ${activePlayers.map(uid => {
           const p = players[uid];
           return `
             <li class="player-item ${uid === room.hostUid ? 'host' : ''}">
-              ${p.photoURL ? `<img class="player-avatar" src="${p.photoURL}" alt="" />` : '<div class="player-avatar" style="background: var(--bg-card-hover); display:flex; align-items:center; justify-content:center;">👤</div>'}
-              <span class="player-name">${p.displayName}</span>
+              <div class="player-avatar" style="background: var(--bg-card-hover); display:flex; align-items:center; justify-content:center;">👤</div>
+              <span class="player-name">${p.displayName}${uid === user.uid ? '（自分）' : ''}</span>
               ${uid === room.hostUid ? '<span class="player-badge">ホスト</span>' : ''}
+              ${isHost && uid !== user.uid ? `<button class="btn-kick" data-uid="${uid}" data-name="${p.displayName}">❌</button>` : ''}
             </li>
           `;
         }).join('')}
       </ul>
 
-      <div class="deck-info">
+      ${spectators.length > 0 ? `
+        <div class="waiting-section-title">観戦者</div>
+        <ul class="player-list spectator-list">
+          ${spectators.map(uid => {
+            const p = players[uid];
+            return `
+              <li class="player-item ${uid === room.hostUid ? 'host' : ''} spectator-item">
+                <span class="player-name">${p.displayName}${uid === user.uid ? '（自分）' : ''}</span>
+                ${uid === room.hostUid ? '<span class="player-badge">ホスト</span>' : ''}
+                ${isHost && uid !== user.uid ? `<button class="btn-kick" data-uid="${uid}" data-name="${p.displayName}">❌</button>` : ''}
+              </li>
+            `;
+          }).join('')}
+        </ul>
+      ` : ''}
+
+      <div class="deck-info" style="margin-top: 1.5rem;">
         残りキャラカード: ${(room.characterDeck || []).length}枚
       </div>
 
       <div class="waiting-actions">
-        ${isHost && playerUids.length >= 2 ? '<button class="btn-primary" id="btn-start-round">ゲーム開始</button>' : ''}
-        ${isHost && playerUids.length < 2 ? '<button class="btn-primary" disabled>2人以上で開始</button>' : ''}
+        ${isHost && activePlayers.length >= 2 ? '<button class="btn-primary" id="btn-start-round">ゲーム開始</button>' : ''}
+        ${isHost && activePlayers.length < 2 ? '<button class="btn-primary" disabled>2人以上で開始</button>' : ''}
         <button class="btn-secondary" id="btn-leave-room">退出</button>
       </div>
+
+      ${isHost ? `
+        <div class="game-actions" style="margin-top: 2rem;">
+          <button class="btn-danger btn-small" id="btn-delete-room" style="opacity: 0.7;">🗑️ ルームを削除して終了</button>
+        </div>
+      ` : ''}
     </div>
   `;
 }
 
-function renderPlayingPhase(room, user, roomId, players, playerUids, isHost) {
+function renderPlayingPhase(room, user, roomId, players, playerUids, isHost, isSpectator) {
   const allDecided = checkAllDecided(room);
   const myDecision = room.decisions?.[user.uid];
+  const activePlayers = playerUids.filter(uid => !players[uid].isSpectator);
+  const spectatorCount = playerUids.filter(uid => players[uid].isSpectator).length;
 
   return `
     ${renderGameHeader(room)}
-    ${renderCards(room, user, players, playerUids, false)}
+    ${renderScoreboard(players)}
+    ${renderRoleSelector(isSpectator, true)}
+    <div class="spectator-counter-mini">👁️ 観戦者: ${spectatorCount} / 10</div>
+    ${renderCards(room, user, players, playerUids, isSpectator)}
 
     <div class="decision-area">
-      ${!myDecision ? `
+      ${isSpectator ? `
+        <p class="decision-done" style="color: var(--accent-blue);">👁️ 観戦中です（全員のカードが見えています）</p>
+      ` : !myDecision ? `
         <p class="decision-prompt">対戦に参加しますか？</p>
         <div class="decision-buttons">
           <button class="btn-fight" id="btn-fight">⚔️ 参加する</button>
@@ -146,7 +197,7 @@ function renderPlayingPhase(room, user, roomId, players, playerUids, isHost) {
         </p>
         <p class="decision-waiting" style="margin-top: 0.5rem;">
           他のプレイヤーの選択を待っています...
-          （${Object.keys(room.decisions || {}).length}/${playerUids.length}）
+          （${Object.keys(room.decisions || {}).length}/${activePlayers.length}）
         </p>
       `}
     </div>
@@ -156,54 +207,77 @@ function renderPlayingPhase(room, user, roomId, players, playerUids, isHost) {
         <button class="btn-primary" id="btn-reveal">全カードを公開する</button>
       </div>
     ` : ''}
+
+    ${isHost ? `
+      <div class="game-actions" style="margin-top: 1rem;">
+        <button class="btn-danger btn-small" id="btn-abort">⚠️ ラウンドを中断する</button>
+      </div>
+    ` : ''}
   `;
 }
 
-function renderJudgingPhase(room, user, roomId, players, playerUids, isHost) {
+function renderJudgingPhase(room, user, roomId, players, playerUids, isHost, isSpectator) {
   // 参加者のみ取得
   const fighters = playerUids.filter(uid => room.decisions?.[uid] === 'fight');
+  const spectatorCount = playerUids.filter(uid => players[uid].isSpectator).length;
 
   return `
     ${renderGameHeader(room)}
+    ${renderScoreboard(players)}
+    ${renderRoleSelector(isSpectator, true)}
+    <div class="spectator-counter-mini">👁️ 観戦者: ${spectatorCount} / 10</div>
     ${renderCards(room, user, players, playerUids, true)}
 
     ${isHost ? `
       <div class="result-area">
         <h3 class="result-title">🏆 対戦結果を入力</h3>
-        <div class="result-form">
-          <label for="select-winner">優勝（+1pt）</label>
-          <select id="select-winner">
-            <option value="">-- 選択 --</option>
-            <option value="none">優勝なし</option>
-            ${fighters.map(uid => `<option value="${uid}">${players[uid].displayName}</option>`).join('')}
-          </select>
-
-          <label for="select-loser">最下位（-1pt）</label>
-          <select id="select-loser">
-            <option value="">-- 選択 --</option>
-            <option value="none">最下位なし</option>
-            ${fighters.map(uid => `<option value="${uid}">${players[uid].displayName}</option>`).join('')}
-          </select>
-
-          <button class="btn-primary" id="btn-submit-result" style="width: 100%; margin-top: 0.5rem;">
-            結果を確定
-          </button>
+        <div class="result-grid">
+          <div class="result-grid-header">
+            <span>プレイヤー</span>
+            <span>🏆 優勝</span>
+            <span>💀 最下位</span>
+          </div>
+          <div class="result-grid-row">
+            <span>（選択なし）</span>
+            <label><input type="radio" name="winner" value="none" checked></label>
+            <label><input type="radio" name="loser" value="none" checked></label>
+          </div>
+          ${fighters.map(uid => `
+            <div class="result-grid-row">
+              <span class="player-name">${players[uid].displayName}</span>
+              <label><input type="radio" name="winner" value="${uid}"></label>
+              <label><input type="radio" name="loser" value="${uid}"></label>
+            </div>
+          `).join('')}
         </div>
+        <button class="btn-primary" id="btn-submit-result" style="width: 100%; margin-top: 1.5rem;">
+          結果を確定
+        </button>
       </div>
     ` : `
       <div style="text-align:center; color: var(--text-muted); padding: 1rem;">
         ホストが結果を入力中...
       </div>
     `}
+
+    ${isHost ? `
+      <div class="game-actions" style="margin-top: 1rem;">
+        <button class="btn-danger btn-small" id="btn-abort">⚠️ 記録せず中断</button>
+      </div>
+    ` : ''}
   `;
 }
 
-function renderResultPhase(room, user, roomId, players, playerUids, isHost) {
+function renderResultPhase(room, user, roomId, players, playerUids, isHost, isSpectator) {
   const winner = room.results?.winner;
   const loser = room.results?.loser;
+  const spectatorCount = playerUids.filter(uid => players[uid].isSpectator).length;
 
   return `
     ${renderGameHeader(room)}
+    ${renderScoreboard(players)}
+    ${renderRoleSelector(isSpectator, true)}
+    <div class="spectator-counter-mini">👁️ 観戦者: ${spectatorCount} / 10</div>
     ${renderCards(room, user, players, playerUids, true)}
 
     <div class="round-result-display">
@@ -212,8 +286,6 @@ function renderResultPhase(room, user, roomId, players, playerUids, isHost) {
       ${loser && players[loser] ? `<div class="result-loser">💀 最下位: ${players[loser].displayName} (-1pt)</div>` : ''}
       ${!winner && !loser ? '<div style="color: var(--text-muted);">結果なし</div>' : ''}
     </div>
-
-    ${renderScoreboard(players)}
 
     <div class="game-actions">
       ${isHost ? `
@@ -226,6 +298,12 @@ function renderResultPhase(room, user, roomId, players, playerUids, isHost) {
           ホストが次のラウンドを開始します...
         </div>
       `}
+
+      ${isHost ? `
+        <div class="game-actions" style="margin-top: 2rem;">
+          <button class="btn-danger btn-small" id="btn-delete-room" style="opacity: 0.7;">🗑️ ルームを削除して終了</button>
+        </div>
+      ` : ''}
     </div>
   `;
 }
@@ -244,21 +322,26 @@ function renderGameHeader(room) {
 function renderCards(room, user, players, playerUids, showAll) {
   return `
     <div class="cards-container">
-      ${playerUids.map(uid => {
+      ${playerUids.filter(uid => !players[uid].isSpectator).map(uid => {
         const card = room.currentCards?.[uid];
         if (!card) return '';
 
         const isMe = uid === user.uid;
-        const isHidden = isMe && !showAll;
         const character = getCharacterById(card.characterId);
         const decision = room.decisions?.[uid];
-        const cardClass = isMe ? (showAll ? 'mine revealed' : 'mine hidden') : (showAll ? 'revealed' : '');
+        
+        let cardClass = isMe ? 'mine' : '';
+        if (isMe && !showAll) {
+          cardClass += ' hidden';
+        } else {
+          cardClass += ' revealed';
+        }
 
         return `
           <div class="card ${cardClass}">
             ${decision ? `<span class="card-decision-badge ${decision}">${decision === 'fight' ? '⚔️' : '🏳️'}</span>` : ''}
             <div class="card-player-name ${isMe ? 'is-me' : ''}">${players[uid].displayName}${isMe ? '（自分）' : ''}</div>
-            <div class="card-content">
+            <div class="card-content" ${isMe && !showAll ? 'style="display: none;"' : ''}>
               ${character ? `
                 <img class="card-character-icon" src="/icons/${character.icon}" alt="${character.name}" />
                 <div class="card-character-name">${character.name}</div>
@@ -267,7 +350,6 @@ function renderCards(room, user, players, playerUids, showAll) {
               `}
               <div class="card-handicap ${getHandicapClass(card.handicap)}">${card.handicap}%</div>
             </div>
-            ${isHidden ? '<div class="card-hidden-label">🃏</div>' : ''}
           </div>
         `;
       }).join('')}
@@ -345,31 +427,45 @@ function bindEventHandlers(el, user, roomId, room, isHost, onLeave) {
 
   // 結果送信
   el.querySelector('#btn-submit-result')?.addEventListener('click', async () => {
-    const winnerVal = document.getElementById('select-winner')?.value;
-    const loserVal = document.getElementById('select-loser')?.value;
-
-    if (!winnerVal || !loserVal) {
-      showToast('優勝と最下位を選択してください', 'error');
+    const winner = el.querySelector('input[name="winner"]:checked')?.value;
+    const loser = el.querySelector('input[name="loser"]:checked')?.value;
+    
+    if (!winner || !loser) {
+      showToast('優勝と最下位を選択してください（なしの場合は「選択なし」）', 'error');
+      return;
+    }
+    
+    if (winner !== 'none' && loser !== 'none' && winner === loser) {
+      showToast('同じプレイヤーを優勝と最下位に選ぶことはできません', 'error');
       return;
     }
 
-    const winnerId = winnerVal === 'none' ? null : winnerVal;
-    const loserId = loserVal === 'none' ? null : loserVal;
-
     try {
-      await submitResult(roomId, room, winnerId, loserId);
+      await submitResult(roomId, {
+        winner: winner === 'none' ? null : winner,
+        loser: loser === 'none' ? null : loser
+      });
     } catch (err) {
       showToast(err.message, 'error');
     }
   });
 
-  // 次のラウンド
+  // 次のラウンドへ
   el.querySelector('#btn-next-round')?.addEventListener('click', async () => {
     try {
       await resetForNextRound(roomId);
-      // resetForNextRoundでstatus='waiting_next'にした後、すぐに次のラウンドを開始
-      const updatedRoom = { ...room, status: 'waiting_next' };
-      await startRound(roomId, room);
+    } catch (err) {
+      showToast(err.message, 'error');
+    }
+  });
+
+  // ルームを削除
+  el.querySelector('#btn-delete-room')?.addEventListener('click', async () => {
+    if (!confirm('ルームを完全に削除して終了しますか？参加者全員がロビーに戻されます。')) return;
+    try {
+      await deleteRoom(roomId);
+      localStorage.removeItem('roomId');
+      showToast('ルームを削除しました', 'info');
     } catch (err) {
       showToast(err.message, 'error');
     }
@@ -385,6 +481,71 @@ function bindEventHandlers(el, user, roomId, room, isHost, onLeave) {
       showToast(err.message, 'error');
     }
   });
+
+  // 役割変更（プレイヤー）
+  el.querySelector('#btn-role-player')?.addEventListener('click', async () => {
+    if (room.status !== 'waiting' && room.status !== 'waiting_next') {
+      showToast('ゲーム進行中の役割変更はできません（次のラウンドをお待ちください）', 'error');
+      return;
+    }
+    try {
+      await updateUserRole(roomId, user.uid, false);
+    } catch (err) {
+      showToast(err.message, 'error');
+    }
+  });
+
+  // 役割変更（観戦者）
+  el.querySelector('#btn-role-spectator')?.addEventListener('click', async () => {
+    if (room.status !== 'waiting' && room.status !== 'waiting_next') {
+      showToast('ゲーム進行中の役割変更はできません（次のラウンドをお待ちください）', 'error');
+      return;
+    }
+    try {
+      await updateUserRole(roomId, user.uid, true);
+    } catch (err) {
+      showToast(err.message, 'error');
+    }
+  });
+
+  // ラウンド中断
+  el.querySelector('#btn-abort')?.addEventListener('click', async () => {
+    if (!confirm('現在のラウンドを中断して待機画面へ戻りますか？（スコアは記録されません）')) return;
+    try {
+      await abortRound(roomId);
+      showToast('ゲームを中断しました', 'info');
+    } catch (err) {
+      showToast(err.message, 'error');
+    }
+  });
+
+  // プレイヤーのキック
+  el.querySelectorAll('.btn-kick').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const targetUid = btn.dataset.uid;
+      const targetName = btn.dataset.name;
+      if (!confirm(`${targetName} さんを退室させますか？`)) return;
+      try {
+        await kickPlayer(roomId, targetUid);
+        showToast(`${targetName} さんを退室させました`, 'info');
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    });
+  });
+}
+
+function renderRoleSelector(isSpectator, isMidGame) {
+  return `
+    <div class="role-selectorcard ${isMidGame ? 'mid-game' : ''}">
+      <p class="role-selector-label">${isMidGame ? '現在の役割' : 'あなたの役割を選択'}</p>
+      <div class="role-switch">
+        <button class="role-btn ${!isSpectator ? 'active' : ''} ${isMidGame && isSpectator ? 'disabled' : ''}" id="btn-role-player">⚔️ 対戦する</button>
+        <button class="role-btn ${isSpectator ? 'active' : ''} ${isMidGame && !isSpectator ? 'disabled' : ''}" id="btn-role-spectator">👁️ 観戦する</button>
+      </div>
+      ${isMidGame ? '<p class="role-hint">ゲーム進行中は変更できません</p>' : ''}
+    </div>
+  `;
 }
 
 export function cleanupGame() {

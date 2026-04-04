@@ -20,13 +20,13 @@ export function generateRoomId() {
  * ルームドキュメントの参照を取得
  */
 function roomRef(roomId) {
-  return doc(db, 'rooms', roomId);
+  return doc(db, 'smashindianpoker', 'data', 'rooms', roomId);
 }
 
 /**
  * ルームを作成
  */
-export async function createRoom(user) {
+export async function createRoom(user, isSpectator = false) {
   const roomId = generateRoomId();
   const characterDeck = shuffle(createCharacterDeck());
   const handicapDeck = shuffle(createHandicapDeck());
@@ -47,6 +47,7 @@ export async function createRoom(user) {
         photoURL: user.photoURL || '',
         score: 0,
         order: 0,
+        isSpectator: false,
       },
     },
   });
@@ -66,18 +67,16 @@ export async function joinRoom(roomId, user) {
   }
 
   const data = snap.data();
-  if (data.status !== 'waiting') {
-    throw new Error('このルームはすでにゲーム中です');
-  }
-
-  const playerCount = Object.keys(data.players).length;
-  if (playerCount >= 4) {
-    throw new Error('ルームが満員です（最大4人）');
-  }
+  const isMidGame = data.status !== 'waiting' && data.status !== 'waiting_next';
 
   // 既に参加済みならスキップ
   if (data.players[user.uid]) {
     return;
+  }
+
+  const players = Object.values(data.players);
+  if (players.length >= 14) {
+    throw new Error('ルームが満員です');
   }
 
   await updateDoc(ref, {
@@ -85,8 +84,33 @@ export async function joinRoom(roomId, user) {
       displayName: user.displayName || 'プレイヤー',
       photoURL: user.photoURL || '',
       score: 0,
-      order: playerCount,
+      order: players.length,
+      isSpectator: isMidGame, // ゲーム中なら強制的に観戦者
     },
+  });
+}
+
+/**
+ * 役割（プレイヤー/観戦者）を変更
+ */
+export async function updateUserRole(roomId, uid, isSpectator) {
+  const ref = roomRef(roomId);
+  const snap = await getDoc(ref);
+  if (!snap.exists()) return;
+
+  const data = snap.data();
+  const players = Object.values(data.players);
+
+  if (isSpectator) {
+    const spectatorCount = players.filter(p => p.isSpectator).length;
+    if (spectatorCount >= 10) throw new Error('観戦者が満員です（最大10人）');
+  } else {
+    const activeCount = players.filter(p => !p.isSpectator).length;
+    if (activeCount >= 4) throw new Error('プレイヤーが満員です（最大4人）');
+  }
+
+  await updateDoc(ref, {
+    [`players.${uid}.isSpectator`]: isSpectator,
   });
 }
 
@@ -98,6 +122,24 @@ export async function leaveRoom(roomId, uid) {
   await updateDoc(ref, {
     [`players.${uid}`]: deleteField(),
   });
+}
+
+/**
+ * ルームから強制退出（ホスト用）
+ */
+export async function kickPlayer(roomId, uid) {
+  const ref = roomRef(roomId);
+  await updateDoc(ref, {
+    [`players.${uid}`]: deleteField(),
+  });
+}
+
+/**
+ * ルームを完全に削除（ホスト用）
+ */
+export async function deleteRoom(roomId) {
+  const ref = roomRef(roomId);
+  await deleteDoc(ref);
 }
 
 /**
