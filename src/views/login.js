@@ -39,10 +39,17 @@ export function renderLogin(container, onLogin) {
             </div>
           </div>
           <div class="rule-step">
+            <div class="rule-icon">⚔️</div>
+            <div class="rule-content">
+              <h4>3. 大乱闘対戦</h4>
+              <p>専用部屋で、カードに表示された「キャラクター」と「ハンデ%」に従って実際に大乱闘をおこないます！</p>
+            </div>
+          </div>
+          <div class="rule-step">
             <div class="rule-icon">🏆</div>
             <div class="rule-content">
-              <h4>3. 結果発表</h4>
-              <p>全員でカードを公開！「参加」した人の中で、最もハンデ%が低い（撃墜されにくい）人が勝利です。</p>
+              <h4>4. 結果発表</h4>
+              <p>全員でカードを公開！「参加」し、生き残った（最下位ではない）プレイヤーたちが勝利となります。</p>
             </div>
           </div>
         </div>
