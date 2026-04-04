@@ -49,13 +49,15 @@ body {
   overflow-x: hidden;
 }
 
-#app {
-  min-height: 100dvh;
+.login-screen {
+  width: 100%;
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 1rem;
+  padding: 2rem 1rem;
+  background: var(--bg-app);
 }
 
 /* ===== Common ===== */
@@ -1141,4 +1143,91 @@ input[type="text"]:focus {
   height: 1.5rem;
   cursor: pointer;
   accent-color: var(--accent-primary);
+}
+
+/* ===== Login Info Section ===== */
+.login-header-group {
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.login-info {
+  margin-top: 2rem;
+  width: 100%;
+  max-width: 440px;
+  background: white;
+  border-radius: var(--radius-xl);
+  padding: 2rem;
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border-subtle);
+}
+
+.login-logo {
+  font-size: 3.25rem;
+  font-weight: 900;
+  color: #f59e0b; /* ゴールド */
+  margin-bottom: 1rem;
+  text-align: center;
+  letter-spacing: -0.04em;
+  line-height: 1.1;
+  text-shadow: 
+    0 2px 0 #b45309, 
+    0 4px 0 #78350f,
+    0 10px 20px rgba(0, 0, 0, 0.15);
+  animation: logoAppear 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+}
+
+@keyframes logoAppear {
+  0% { transform: translateY(-20px) scale(0.9); opacity: 0; }
+  100% { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+.login-info-title {
+  font-size: 1.25rem;
+  font-weight: 900;
+  color: var(--accent-primary);
+  margin-bottom: 1.5rem;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.rule-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.rule-step {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.rule-icon {
+  width: 40px;
+  height: 40px;
+  background: var(--bg-app);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  flex-shrink: 0;
+  color: var(--accent-primary);
+}
+
+.rule-content h4 {
+  font-size: 0.95rem;
+  font-weight: 800;
+  margin-bottom: 0.25rem;
+  color: var(--text-main);
+}
+
+.rule-content p {
+  font-size: 0.85rem;
+  line-height: 1.55;
+  color: var(--text-secondary);
 }
