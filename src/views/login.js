@@ -23,6 +23,10 @@ export function renderLogin(container, onLogin) {
 
       <div class="login-info">
         <h3 class="login-info-title">🎮 遊び方</h3>
+        <div class="game-capacity-info" style="display: flex; gap: 0.5rem; justify-content: center; margin-bottom: 1.5rem; flex-wrap: wrap;">
+          <span style="background: var(--bg-app); color: var(--text-secondary); padding: 0.4rem 0.75rem; border-radius: var(--radius-md); font-size: 0.8rem; font-weight: 700;">👥 対戦: 2〜4人</span>
+          <span style="background: var(--bg-app); color: var(--text-secondary); padding: 0.4rem 0.75rem; border-radius: var(--radius-md); font-size: 0.8rem; font-weight: 700;">📣 観戦: 最大10人（対戦不参加）</span>
+        </div>
         <div class="rule-steps">
           <div class="rule-step">
             <div class="rule-icon">🃏</div>
@@ -42,14 +46,14 @@ export function renderLogin(container, onLogin) {
             <div class="rule-icon">⚔️</div>
             <div class="rule-content">
               <h4>3. 大乱闘対戦</h4>
-              <p>専用部屋で、カードに表示された「キャラクター」と「ハンデ%」に従って実際に大乱闘をおこないます！</p>
+              <p>全員のカードを公開！「参加」を選んだプレイヤー同士で、カードの「キャラクター」と「ハンデ%」に従って実際に専用部屋で対戦します！</p>
             </div>
           </div>
           <div class="rule-step">
             <div class="rule-icon">🏆</div>
             <div class="rule-content">
               <h4>4. 結果発表</h4>
-              <p>全員でカードを公開！「参加」し、生き残った（最下位ではない）プレイヤーたちが勝利となります。</p>
+              <p>実際のスマブラの対戦順位に応じてスコアを獲得！これを1ラウンドとし、何度か繰り返して最終的な優勝者を決めます。</p>
             </div>
           </div>
         </div>
@@ -76,7 +80,7 @@ export function renderLogin(container, onLogin) {
       btn.disabled = true;
       btn.innerHTML = `<span class="loading-spinner"></span> ログイン中...`;
       errorEl.textContent = '';
-      
+
       const user = await signInAsGuest(name);
       localStorage.setItem('smash_indian_poker_name', name);
       onLogin(user);
