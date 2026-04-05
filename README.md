@@ -27,7 +27,7 @@
 - 全員の意思が固まったら、ロビーIDの横にある「全公開」ボタンで一斉に公開します。
 
 ### 4. 大乱闘対戦
-- 「参加」を選んだプレイヤー同士で、実際にスマブラの専用部屋を開き、配られた「キャラクター」と「ハンデ%」に設定して対戦を行います！
+- 「参加」を選んだプレイヤー同士で、実際にスマブラの専用部屋を開き、配られた「キャラクター」と「ハンデ%」に設定して対戦を行います。
 
 ### 5. スコア記録
 - 対戦後、ホストが結果（優勝・最下位）を入力して確定します。
@@ -44,7 +44,7 @@
 - **Backend/DB**: Firebase Firestore (Real-time synchronization)
 - **Auth**: Firebase Authentication (Anonymous Auth)
 - **Hosting**: Netlify
-- **Icons**: [スマブラ公式アセット](https://www.smashbros.com/)をベースにしたアイコンシステム
+- **Icons**: [スマブラSPECIAL 検証wiki](https://w.atwiki.jp/smashsp_kensyou/pages/47.html)
 
 ---
 
