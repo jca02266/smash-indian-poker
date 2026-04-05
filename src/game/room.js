@@ -5,7 +5,7 @@ import {
 import { createCharacterDeck, createHandicapDeck, shuffle } from './cards.js';
 
 /**
- * 6桁のルームIDを生成
+ * 6桁のロビーIDを生成
  */
 export function generateRoomId() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // 紛らわしい文字を除外
@@ -17,14 +17,14 @@ export function generateRoomId() {
 }
 
 /**
- * ルームドキュメントの参照を取得
+ * ロビードキュメントの参照を取得
  */
 function roomRef(roomId) {
   return doc(db, 'smashindianpoker', 'data', 'rooms', roomId);
 }
 
 /**
- * ルームを作成
+ * ロビーを作成
  */
 export async function createRoom(user, isSpectator = false) {
   const roomId = generateRoomId();
@@ -56,14 +56,14 @@ export async function createRoom(user, isSpectator = false) {
 }
 
 /**
- * ルームに参加
+ * ロビーに参加
  */
 export async function joinRoom(roomId, user) {
   const ref = roomRef(roomId);
   const snap = await getDoc(ref);
 
   if (!snap.exists()) {
-    throw new Error('ルームが見つかりません');
+    throw new Error('ロビーが見つかりません');
   }
 
   const data = snap.data();
@@ -76,7 +76,7 @@ export async function joinRoom(roomId, user) {
 
   const players = Object.values(data.players);
   if (players.length >= 14) {
-    throw new Error('ルームが満員です');
+    throw new Error('ロビーが満員です');
   }
 
   await updateDoc(ref, {
@@ -115,7 +115,7 @@ export async function updateUserRole(roomId, uid, isSpectator) {
 }
 
 /**
- * ルームから退出
+ * ロビーから退出
  */
 export async function leaveRoom(roomId, uid) {
   const ref = roomRef(roomId);
@@ -125,7 +125,7 @@ export async function leaveRoom(roomId, uid) {
 }
 
 /**
- * ルームから強制退出（ホスト用）
+ * ロビーから強制退出（ホスト用）
  */
 export async function kickPlayer(roomId, uid) {
   const ref = roomRef(roomId);
@@ -135,7 +135,7 @@ export async function kickPlayer(roomId, uid) {
 }
 
 /**
- * ルームを完全に削除（ホスト用）
+ * ロビーを完全に削除（ホスト用）
  */
 export async function deleteRoom(roomId) {
   const ref = roomRef(roomId);
@@ -143,7 +143,7 @@ export async function deleteRoom(roomId) {
 }
 
 /**
- * ルームをリアルタイム監視
+ * ロビーをリアルタイム監視
  */
 export function subscribeRoom(roomId, callback) {
   return onSnapshot(roomRef(roomId), (snap) => {
@@ -156,7 +156,7 @@ export function subscribeRoom(roomId, callback) {
 }
 
 /**
- * ルームデータを取得
+ * ロビーデータを取得
  */
 export async function getRoom(roomId) {
   const snap = await getDoc(roomRef(roomId));

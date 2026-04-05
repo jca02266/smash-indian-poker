@@ -16,7 +16,7 @@ export function renderLogin(container, onLogin) {
           <input type="text" id="input-guest-name" placeholder="例: マリオ" maxlength="10" />
           <p class="error-msg" id="login-error"></p>
           <button class="btn-primary" id="btn-guest-login" style="width: 100%; margin-top: 1rem;">
-            ルームへ進む
+            ロビーへ進む
           </button>
         </div>
       </div>

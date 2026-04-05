@@ -78,7 +78,7 @@ onAuthChanged((user) => {
     // ゲーム中ならそのまま
     if (currentView === 'game') return;
 
-    // リロード時のルーム復帰
+    // リロード時のロビー復帰
     const savedRoomId = localStorage.getItem('smash_poker_room_id');
     if (savedRoomId) {
       currentRoomId = savedRoomId;

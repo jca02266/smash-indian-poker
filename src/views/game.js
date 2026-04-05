@@ -41,7 +41,7 @@ export function renderGame(container, user, roomId, { onLeave }) {
   unsubscribe = subscribeRoom(roomId, (data) => {
     const el = container.querySelector('#game-content');
     if (!data) {
-      showToast('ルームが見つかりません', 'error');
+      showToast('ロビーが見つかりません', 'error');
       cleanup();
       onLeave();
       return;
@@ -57,7 +57,7 @@ export function renderGame(container, user, roomId, { onLeave }) {
     // アニメーションが必要か判定
     const isAnimated = (lastStatus === 'waiting' && data.status === 'playing') || (lastRound !== null && data.round > lastRound);
     const isRevealing = (lastStatus === 'playing' && data.status === 'judging');
-    
+
     lastStatus = data.status;
     lastRound = data.round;
 
@@ -115,7 +115,7 @@ function renderWaitingRoom(room, roomId, user, isHost, players, playerUids, isSp
   return `
     <div class="waiting-screen">
       <div class="room-id-display">
-        <div class="room-id-label">ルームID</div>
+        <div class="room-id-label">ロビーID</div>
         <div class="room-id-value" id="room-id-copy" title="クリックしてコピー">${roomId}</div>
         <div class="room-id-hint">タップしてコピー</div>
       </div>
@@ -131,8 +131,8 @@ function renderWaitingRoom(room, roomId, user, isHost, players, playerUids, isSp
       <div class="waiting-section-title">対戦者 (${activePlayers.length} / 4)</div>
       <ul class="player-list">
         ${activePlayers.map(uid => {
-          const p = players[uid];
-          return `
+    const p = players[uid];
+    return `
             <li class="player-item ${uid === room.hostUid ? 'host' : ''}">
               <div class="player-avatar" style="background: var(--bg-card-hover); display:flex; align-items:center; justify-content:center;">👤</div>
               <span class="player-name">${p.displayName}${uid === user.uid ? '（自分）' : ''}</span>
@@ -140,22 +140,22 @@ function renderWaitingRoom(room, roomId, user, isHost, players, playerUids, isSp
               ${isHost && uid !== user.uid ? `<button class="btn-kick" data-uid="${uid}" data-name="${p.displayName}">❌</button>` : ''}
             </li>
           `;
-        }).join('')}
+  }).join('')}
       </ul>
 
       ${spectators.length > 0 ? `
         <div class="waiting-section-title">観戦者</div>
         <ul class="player-list spectator-list">
           ${spectators.map(uid => {
-            const p = players[uid];
-            return `
+    const p = players[uid];
+    return `
               <li class="player-item ${uid === room.hostUid ? 'host' : ''} spectator-item">
                 <span class="player-name">${p.displayName}${uid === user.uid ? '（自分）' : ''}</span>
                 ${uid === room.hostUid ? '<span class="player-badge">ホスト</span>' : ''}
                 ${isHost && uid !== user.uid ? `<button class="btn-kick" data-uid="${uid}" data-name="${p.displayName}">❌</button>` : ''}
               </li>
             `;
-          }).join('')}
+  }).join('')}
         </ul>
       ` : ''}
 
@@ -171,7 +171,7 @@ function renderWaitingRoom(room, roomId, user, isHost, players, playerUids, isSp
 
       ${isHost ? `
         <div class="game-actions" style="margin-top: 2rem;">
-          <button class="btn-danger btn-small" id="btn-delete-room" style="opacity: 0.7;">🗑️ ルームを削除して終了</button>
+          <button class="btn-danger btn-small" id="btn-delete-room" style="opacity: 0.7;">🗑️ ロビーを削除して終了</button>
         </div>
       ` : ''}
     </div>
@@ -185,7 +185,7 @@ function renderPlayingPhase(room, user, roomId, players, playerUids, isHost, isS
   const spectatorCount = playerUids.filter(uid => players[uid].isSpectator).length;
 
   return `
-    ${renderGameHeader(room)}
+    ${renderGameHeader(room, roomId)}
     ${renderScoreboard(players)}
     ${renderRoleSelector(isSpectator, true)}
     <div class="spectator-counter-mini">👥 観戦者: ${spectatorCount} / 10</div>
@@ -231,11 +231,21 @@ function renderJudgingPhase(room, user, roomId, players, playerUids, isHost, isS
   const spectatorCount = playerUids.filter(uid => players[uid].isSpectator).length;
 
   return `
-    ${renderGameHeader(room)}
+    ${renderGameHeader(room, roomId)}
     ${renderScoreboard(players)}
     ${renderRoleSelector(isSpectator, true)}
     <div class="spectator-counter-mini">👥 観戦者: ${spectatorCount} / 10</div>
     ${renderCards(room, user, players, playerUids, true, false, isRevealing)}
+
+    <div class="battle-instruction" style="text-align: center; margin: 1.5rem 0; padding: 1.25rem; background: #e0f2fe; border-radius: var(--radius-lg); border: 2px solid #bae6fd;">
+      ${isSpectator ? `
+        <div style="font-weight: 900; color: var(--accent-blue); font-size: 1.2rem;">👀 対戦中</div>
+      ` : isHost ? `
+        <div style="font-weight: 900; color: var(--accent-primary); font-size: 1.1rem; line-height: 1.5;">🎮 スマブラで対戦を始めてください。<br><span style="font-size: 0.9rem; font-weight: 700;">対戦終了後結果を記録してください</span></div>
+      ` : `
+        <div style="font-weight: 900; color: var(--accent-primary); font-size: 1.2rem;">🎮 スマブラで対戦を始めてください。</div>
+      `}
+    </div>
 
     ${isHost ? `
       <div class="result-area">
@@ -283,7 +293,7 @@ function renderResultPhase(room, user, roomId, players, playerUids, isHost, isSp
   const spectatorCount = playerUids.filter(uid => players[uid].isSpectator).length;
 
   return `
-    ${renderGameHeader(room)}
+    ${renderGameHeader(room, roomId)}
     ${renderScoreboard(players)}
     ${renderRoleSelector(isSpectator, true)}
     <div class="spectator-counter-mini">👥 観戦者: ${spectatorCount} / 10</div>
@@ -299,8 +309,8 @@ function renderResultPhase(room, user, roomId, players, playerUids, isHost, isSp
     <div class="game-actions">
       ${isHost ? `
         ${(room.characterDeck || []).length >= playerUids.length
-          ? '<button class="btn-primary" id="btn-next-round">次のラウンドへ</button>'
-          : '<button class="btn-secondary" disabled>カードがありません</button>'}
+        ? '<button class="btn-primary" id="btn-next-round">次のラウンドへ</button>'
+        : '<button class="btn-secondary" disabled>カードがありません</button>'}
         <button class="btn-secondary" id="btn-leave-room">ゲーム終了</button>
       ` : `
         <div style="text-align:center; color: var(--text-muted);">
@@ -310,7 +320,7 @@ function renderResultPhase(room, user, roomId, players, playerUids, isHost, isSp
 
       ${isHost ? `
         <div class="game-actions" style="margin-top: 2rem;">
-          <button class="btn-danger btn-small" id="btn-delete-room" style="opacity: 0.7;">🗑️ ルームを削除して終了</button>
+          <button class="btn-danger btn-small" id="btn-delete-room" style="opacity: 0.7;">🗑️ ロビーを削除して終了</button>
         </div>
       ` : ''}
     </div>
@@ -319,10 +329,13 @@ function renderResultPhase(room, user, roomId, players, playerUids, isHost, isSp
 
 // ===== Helper Renderers =====
 
-function renderGameHeader(room) {
+function renderGameHeader(room, roomId) {
   return `
     <div class="game-header">
-      <div class="game-round">ROUND <span>${room.round}</span></div>
+      <div class="game-round">
+        ROUND <span>${room.round}</span>
+        <span style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); margin-left: 0.5rem; background: var(--bg-card); padding: 0.2rem 0.5rem; border-radius: 4px; border: 1px solid var(--border-subtle);">ロビーID: ${roomId}</span>
+      </div>
       <div class="game-status">${getStatusLabel(room.status)}</div>
     </div>
   `;
@@ -330,38 +343,38 @@ function renderGameHeader(room) {
 
 function renderCards(room, user, players, playerUids, showAll, isAnimated = false, isRevealing = false) {
   const participants = playerUids.filter(uid => !players[uid].isSpectator);
-  
+
   return `
     <div class="cards-container">
       ${participants.map((uid, index) => {
-        const card = room.currentCards?.[uid];
-        if (!card) return '';
+    const card = room.currentCards?.[uid];
+    if (!card) return '';
 
-        const isMe = uid === user.uid;
-        const character = getCharacterById(card.characterId);
-        const decision = room.decisions?.[uid];
-        
-        let cardClass = isMe ? 'mine' : '';
-        // 自分以外のカード、または結果公開時は反転（revealed）
-        if (showAll || !isMe) {
-          cardClass += ' revealed';
-        }
+    const isMe = uid === user.uid;
+    const character = getCharacterById(card.characterId);
+    const decision = room.decisions?.[uid];
 
-        if (isAnimated) {
-          cardClass += ' card-anim-deal';
-        } else if (isRevealing) {
-          cardClass += ' card-anim-reveal';
-        }
+    let cardClass = isMe ? 'mine' : '';
+    // 自分以外のカード、または結果公開時は反転（revealed）
+    if (showAll || !isMe) {
+      cardClass += ' revealed';
+    }
 
-        let style = '';
-        if (isAnimated) {
-          // 配布(0.8s) + 個別遅延(index*0.1s) で配られた後にフリップが始まるように
-          style = `style="animation-delay: ${index * 0.12}s;"`;
-        } else if (isRevealing) {
-          style = `style="animation-delay: ${index * 0.1}s;"`;
-        }
+    if (isAnimated) {
+      cardClass += ' card-anim-deal';
+    } else if (isRevealing) {
+      cardClass += ' card-anim-reveal';
+    }
 
-        return `
+    let style = '';
+    if (isAnimated) {
+      // 配布(0.8s) + 個別遅延(index*0.1s) で配られた後にフリップが始まるように
+      style = `style="animation-delay: ${index * 0.12}s;"`;
+    } else if (isRevealing) {
+      style = `style="animation-delay: ${index * 0.1}s;"`;
+    }
+
+    return `
           <div class="card ${cardClass}" ${style}>
             <div class="card-inner">
               <!-- 裏面（？マーク、最初はこれが前面） -->
@@ -384,7 +397,7 @@ function renderCards(room, user, players, playerUids, showAll, isAnimated = fals
             </div>
           </div>
         `;
-      }).join('')}
+  }).join('')}
     </div>
   `;
 }
@@ -397,15 +410,15 @@ function renderScoreboard(players) {
       <div class="scoreboard-title">📊 スコア</div>
       <ul class="scoreboard-list">
         ${entries.map(([uid, p]) => {
-          const score = p.score || 0;
-          const cls = score > 0 ? 'positive' : score < 0 ? 'negative' : 'zero';
-          return `
+    const score = p.score || 0;
+    const cls = score > 0 ? 'positive' : score < 0 ? 'negative' : 'zero';
+    return `
             <li class="score-item">
               <span class="score-name">${p.displayName}</span>
               <span class="score-value ${cls}">${score > 0 ? '+' : ''}${score}</span>
             </li>
           `;
-        }).join('')}
+  }).join('')}
       </ul>
     </div>
   `;
@@ -414,10 +427,10 @@ function renderScoreboard(players) {
 // ===== Event Binding =====
 
 function bindEventHandlers(el, user, roomId, room, isHost, onLeave) {
-  // ルームIDコピー
+  // ロビーIDコピー
   el.querySelector('#room-id-copy')?.addEventListener('click', () => {
     navigator.clipboard.writeText(roomId).then(() => {
-      showToast('ルームIDをコピーしました', 'success');
+      showToast('ロビーIDをコピーしました', 'success');
     });
   });
 
@@ -461,12 +474,12 @@ function bindEventHandlers(el, user, roomId, room, isHost, onLeave) {
   el.querySelector('#btn-submit-result')?.addEventListener('click', async () => {
     const winner = el.querySelector('input[name="winner"]:checked')?.value;
     const loser = el.querySelector('input[name="loser"]:checked')?.value;
-    
+
     if (!winner || !loser) {
       showToast('優勝と最下位を選択してください（なしの場合は「選択なし」）', 'error');
       return;
     }
-    
+
     if (winner !== 'none' && loser !== 'none' && winner === loser) {
       showToast('同じプレイヤーを優勝と最下位に選ぶことはできません', 'error');
       return;
@@ -491,13 +504,13 @@ function bindEventHandlers(el, user, roomId, room, isHost, onLeave) {
     }
   });
 
-  // ルームを削除
+  // ロビーを削除
   el.querySelector('#btn-delete-room')?.addEventListener('click', async () => {
-    if (!confirm('ルームを完全に削除して終了しますか？参加者全員がロビーに戻されます。')) return;
+    if (!confirm('ロビーを完全に削除して終了しますか？参加者全員がロビーに戻されます。')) return;
     try {
       await deleteRoom(roomId);
       localStorage.removeItem('roomId');
-      showToast('ルームを削除しました', 'info');
+      showToast('ロビーを削除しました', 'info');
     } catch (err) {
       showToast(err.message, 'error');
     }

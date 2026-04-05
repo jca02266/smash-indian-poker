@@ -15,18 +15,18 @@ export function renderLobby(container, user, { onRoomJoined, onLogout }) {
 
       <div class="lobby-actions">
         <div class="action-card">
-          <h2>👤ホスト：ルームを作成</h2>
-          <p class="action-desc">このボタンを押して参加者にルームIDを共有します。</p>
+          <h2>👤ホスト：ロビーを作成</h2>
+          <p class="action-desc">このボタンを押して参加者にロビーIDを共有します。</p>
           <button class="btn-primary" id="btn-create-room" style="width: 100%;">
-            新しいルームを作る
+            新しいロビーを作る
           </button>
         </div>
 
         <div class="action-card">
-          <h2>👥他の参加者：ルームに参加</h2>
-          <p class="action-desc">ホストから教えてもらったルームIDを入力して「参加」します。</p>
+          <h2>👥他の参加者：ロビーに参加</h2>
+          <p class="action-desc">ホストから教えてもらったロビーIDを入力して「参加」します。</p>
           <div class="join-form">
-            <input type="text" id="input-room-id" placeholder="ルームID" maxlength="6" autocomplete="off" spellcheck="false" autocorrect="off" />
+            <input type="text" id="input-room-id" placeholder="ロビーID" maxlength="6" autocomplete="off" spellcheck="false" autocorrect="off" />
             <button class="btn-primary" id="btn-join-room">参加</button>
           </div>
           <p class="error-msg" id="join-error"></p>
@@ -43,12 +43,12 @@ export function renderLobby(container, user, { onRoomJoined, onLogout }) {
       btn.disabled = true;
       btn.innerHTML = `<span class="loading-spinner"></span> 作成中...`;
       const roomId = await createRoom(user);
-      showToast(`ルーム ${roomId} を作成しました`, 'success');
+      showToast(`ロビー ${roomId} を作成しました`, 'success');
       onRoomJoined(roomId);
     } catch (err) {
       console.error('Room creation error:', err);
-      showToast('ルーム作成に失敗しました', 'error');
-      btn.innerHTML = '新しいルームを作る';
+      showToast('ロビー作成に失敗しました', 'error');
+      btn.innerHTML = '新しいロビーを作る';
       btn.disabled = false;
     }
   });
@@ -59,14 +59,14 @@ export function renderLobby(container, user, { onRoomJoined, onLogout }) {
     const roomId = input.value.trim().toUpperCase();
 
     if (!roomId) {
-      errorEl.textContent = 'ルームIDを入力してください';
+      errorEl.textContent = 'ロビーIDを入力してください';
       return;
     }
 
     try {
       errorEl.textContent = '';
       await joinRoom(roomId, user);
-      showToast(`ルーム ${roomId} に参加しました`, 'success');
+      showToast(`ロビー ${roomId} に参加しました`, 'success');
       onRoomJoined(roomId);
     } catch (err) {
       console.error('Room join error:', err);
