@@ -49,6 +49,16 @@ body {
   overflow-x: hidden;
 }
 
+#app {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
 .login-screen {
   width: 100%;
   min-height: 100vh;
@@ -374,6 +384,7 @@ input[type="text"]:focus {
 .waiting-screen {
   width: 100%;
   max-width: 500px;
+  margin: 2rem auto;
   animation: fadeIn 0.4s ease;
 }
 
@@ -462,6 +473,7 @@ input[type="text"]:focus {
 .game-screen {
   width: 100%;
   max-width: 800px;
+  margin: 2rem auto;
   animation: fadeIn 0.4s ease;
 }
 
