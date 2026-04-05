@@ -15,14 +15,16 @@ export function renderLobby(container, user, { onRoomJoined, onLogout }) {
 
       <div class="lobby-actions">
         <div class="action-card">
-          <h2>🏠 ルームを作成</h2>
+          <h2>👤ホスト：ルームを作成</h2>
+          <p class="action-desc">このボタンを押して参加者にルームIDを共有します。</p>
           <button class="btn-primary" id="btn-create-room" style="width: 100%;">
             新しいルームを作る
           </button>
         </div>
 
         <div class="action-card">
-          <h2>🚪 ルームに参加</h2>
+          <h2>👥他の参加者：ルームに参加</h2>
+          <p class="action-desc">ホストから教えてもらったルームIDを入力して「参加」します。</p>
           <div class="join-form">
             <input type="text" id="input-room-id" placeholder="ルームID" maxlength="6" autocomplete="off" spellcheck="false" autocorrect="off" />
             <button class="btn-primary" id="btn-join-room">参加</button>
